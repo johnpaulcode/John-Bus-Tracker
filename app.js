@@ -40,7 +40,7 @@ const trainStops = [
     }
 ];
 
-const TFL_APP_KEY = ''; // Optional: Register for a free key on api-portal.tfl.gov.uk to increase limits to 500 req/min
+const TFL_APP_KEY = 'e536138153af49e786cd98d404228dcd';
 
 let activeTab = 'bus';
 
