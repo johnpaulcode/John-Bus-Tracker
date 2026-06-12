@@ -1,54 +1,65 @@
-const stops = [
-    { name: "Pawsons Road", id: "490010868N", letter: "T", direction: "Alison work towards Home", lines: ["468"] },
-    { name: "South Norwood Clock Tower", id: "490012320A", letter: "A", direction: "South Norwood towards Purley David Lloyd", lines: ["157"] },
-    { name: "Hannibal Way", id: "490007755E", letter: "", direction: "Purley David Lloyd towards South Norwood", lines: ["157"] },
-    { name: "Cromwell Road", id: "490013376S", letter: "H", direction: "Alison work to Purley David Lloyd", lines: ["157"] },
-    { name: "Derwent Road", id: "490006061W", letter: "N", direction: "Towards Beckenham David Lloyd", lines: ["356"] },
-    { name: "Altyre Way", id: "490013532W", letter: "", direction: "Beckenham David Lloyd towards Home", lines: ["356"] },
-    { name: "Nugent Road", id: "490014601S", letter: "SP", direction: "Home towards Croydon", lines: ["468"] },
-    { name: "Howden Road", id: "490008410N", letter: "NA", direction: "Home towards Elephant & Castle", lines: ["468", "196"] }
-];
-
-const trainStops = [
+const allStops = [
+    // --- Journey from Home ---
+    // Buses
+    { name: "South Norwood Clock Tower", id: "490012320A", letter: "A", direction: "South Norwood towards Purley David Lloyd", lines: ["157"], type: "bus", category: "fromHome" },
+    { name: "Cromwell Road", id: "490013376S", letter: "H", direction: "Alison work to Purley David Lloyd", lines: ["157"], type: "bus", category: "fromHome" },
+    { name: "Derwent Road", id: "490006061W", letter: "N", direction: "Towards Beckenham David Lloyd", lines: ["356"], type: "bus", category: "fromHome" },
+    { name: "Nugent Road", id: "490014601S", letter: "SP", direction: "Home towards Croydon", lines: ["468"], type: "bus", category: "fromHome" },
+    { name: "Howden Road", id: "490008410N", letter: "NA", direction: "Home towards Elephant & Castle", lines: ["468", "196"], type: "bus", category: "fromHome" },
+    // Trains
     {
         name: "Norwood Junction",
         id: "910GNORWDJ",
         type: "train",
         direction: "Thameslink to Farringdon",
+        category: "fromHome",
         filter: arrival => !(arrival.destinationName || "").includes("Three Bridges")
-    },
-    {
-        name: "Farringdon",
-        id: "940GZZLUFCN",
-        type: "tube",
-        direction: "Met Line to Harrow",
-        filter: arrival => arrival.lineName === "Metropolitan" && !(arrival.destinationName || "").includes("Aldgate")
     },
     {
         name: "West Harrow",
         id: "940GZZLUWHW",
         type: "tube",
         direction: "Met Line towards Farringdon",
+        category: "fromHome",
         filter: arrival => arrival.lineName === "Metropolitan" && ((arrival.platformName || "").includes("Southbound") || (arrival.platformName || "").includes("Platform 2"))
+    },
+
+    // --- Journey to Home ---
+    // Buses
+    { name: "Pawsons Road", id: "490010868N", letter: "T", direction: "Alison work towards Home", lines: ["468"], type: "bus", category: "toHome" },
+    { name: "Hannibal Way", id: "490007755E", letter: "", direction: "Purley David Lloyd towards South Norwood", lines: ["157"], type: "bus", category: "toHome" },
+    { name: "Altyre Way", id: "490013532W", letter: "", direction: "Beckenham David Lloyd towards Home", lines: ["356"], type: "bus", category: "toHome" },
+    // Trains
+    {
+        name: "Farringdon",
+        id: "940GZZLUFCN",
+        type: "tube",
+        direction: "Met Line to Harrow",
+        category: "toHome",
+        filter: arrival => arrival.lineName === "Metropolitan" && !(arrival.destinationName || "").includes("Aldgate")
     },
     {
         name: "Farringdon",
         id: "910GFRNDNLT",
         type: "train",
         direction: "Thameslink towards Norwood Jct",
+        category: "toHome",
         filter: arrival => (arrival.platformName || "").includes("Platform 3") && (arrival.destinationName || "").includes("Three Bridges")
     }
 ];
 
 const TFL_APP_KEY = 'e536138153af49e786cd98d404228dcd';
 
-let activeTab = 'bus';
+let activeTab = 'fromHome';  // 'fromHome' or 'toHome'
+let activeSubTab = 'bus';    // 'bus' or 'train'
 
 const app = document.getElementById('app');
 const refreshBtn = document.getElementById('refresh-btn');
 const pageTitle = document.querySelector('header h1');
-const tabBus = document.getElementById('tab-bus');
-const tabTrain = document.getElementById('tab-train');
+const tabFrom = document.getElementById('tab-from');
+const tabTo = document.getElementById('tab-to');
+const subtabBus = document.getElementById('subtab-bus');
+const subtabTrain = document.getElementById('subtab-train');
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -139,11 +150,16 @@ async function render() {
     refreshBtn.textContent = '...';
     refreshBtn.disabled = true;
 
-    const currentStops = activeTab === 'bus' ? stops : trainStops;
-    pageTitle.textContent = activeTab === 'bus' ? 'Bus Times' : 'Train Times';
+    pageTitle.textContent = activeTab === 'fromHome' ? 'Journey from Home' : 'Journey to Home';
+
+    const activeType = activeSubTab === 'bus' ? 'bus' : ['train', 'tube'];
+    const currentStops = allStops.filter(stop => 
+        stop.category === activeTab && 
+        (Array.isArray(activeType) ? activeType.includes(stop.type) : stop.type === activeType)
+    );
 
     const stopPromises = currentStops.map(async (stop, index) => {
-        await sleep(index * 100); // Stagger calls by 100ms to avoid throttling/rate limiting
+        await sleep(index * 100); // Stagger calls
         let arrivals = await fetchArrivals(stop);
         
         // Apply filters
@@ -180,7 +196,7 @@ async function render() {
                                 <span class="expected-time">${formatExpectedTime(bus.expectedArrival)}</span>
                             </span>
                         </li>
-                    `).join('') : `<li class="arrival-item">No ${activeTab === 'bus' ? 'buses' : 'trains'} found.</li>`}
+                    `).join('') : `<li class="arrival-item">No ${activeSubTab === 'bus' ? 'buses' : 'trains'} found.</li>`}
                 </ul>
             </div>
         `;
@@ -194,20 +210,38 @@ async function render() {
 }
 
 // Tab Switching Listeners
-tabBus.addEventListener('click', () => {
-    if (activeTab !== 'bus') {
-        activeTab = 'bus';
-        tabBus.classList.add('active');
-        tabTrain.classList.remove('active');
+tabFrom.addEventListener('click', () => {
+    if (activeTab !== 'fromHome') {
+        activeTab = 'fromHome';
+        tabFrom.classList.add('active');
+        tabTo.classList.remove('active');
         render();
     }
 });
 
-tabTrain.addEventListener('click', () => {
-    if (activeTab !== 'train') {
-        activeTab = 'train';
-        tabTrain.classList.add('active');
-        tabBus.classList.remove('active');
+tabTo.addEventListener('click', () => {
+    if (activeTab !== 'toHome') {
+        activeTab = 'toHome';
+        tabTo.classList.add('active');
+        tabFrom.classList.remove('active');
+        render();
+    }
+});
+
+subtabBus.addEventListener('click', () => {
+    if (activeSubTab !== 'bus') {
+        activeSubTab = 'bus';
+        subtabBus.classList.add('active');
+        subtabTrain.classList.remove('active');
+        render();
+    }
+});
+
+subtabTrain.addEventListener('click', () => {
+    if (activeSubTab !== 'train') {
+        activeSubTab = 'train';
+        subtabTrain.classList.add('active');
+        subtabBus.classList.remove('active');
         render();
     }
 });
