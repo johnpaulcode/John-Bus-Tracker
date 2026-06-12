@@ -40,6 +40,8 @@ const trainStops = [
     }
 ];
 
+const TFL_APP_KEY = ''; // Optional: Register for a free key on api-portal.tfl.gov.uk to increase limits to 500 req/min
+
 let activeTab = 'bus';
 
 const app = document.getElementById('app');
@@ -48,10 +50,14 @@ const pageTitle = document.querySelector('header h1');
 const tabBus = document.getElementById('tab-bus');
 const tabTrain = document.getElementById('tab-train');
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 async function fetchArrivals(stop) {
     try {
+        const keyParam = TFL_APP_KEY ? `app_key=${TFL_APP_KEY}` : '';
         if (stop.type === 'train') {
-            const response = await fetch(`https://api.tfl.gov.uk/StopPoint/${stop.id}/ArrivalDepartures?lineIds=thameslink`);
+            const url = `https://api.tfl.gov.uk/StopPoint/${stop.id}/ArrivalDepartures?lineIds=thameslink` + (keyParam ? `&${keyParam}` : '');
+            const response = await fetch(url);
             if (!response.ok) throw new Error('ArrivalDepartures response was not ok');
             const data = await response.json();
             
@@ -72,7 +78,8 @@ async function fetchArrivals(stop) {
                 };
             });
         } else {
-            const response = await fetch(`https://api.tfl.gov.uk/StopPoint/${stop.id}/Arrivals`);
+            const url = `https://api.tfl.gov.uk/StopPoint/${stop.id}/Arrivals` + (keyParam ? `?${keyParam}` : '');
+            const response = await fetch(url);
             if (!response.ok) throw new Error('Arrivals response was not ok');
             const data = await response.json();
             
@@ -135,7 +142,8 @@ async function render() {
     const currentStops = activeTab === 'bus' ? stops : trainStops;
     pageTitle.textContent = activeTab === 'bus' ? 'Bus Times' : 'Train Times';
 
-    const stopPromises = currentStops.map(async stop => {
+    const stopPromises = currentStops.map(async (stop, index) => {
+        await sleep(index * 100); // Stagger calls by 100ms to avoid throttling/rate limiting
         let arrivals = await fetchArrivals(stop);
         
         // Apply filters
