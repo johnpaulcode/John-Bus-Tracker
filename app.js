@@ -1,4 +1,5 @@
 const stops = [
+    { name: "Pawsons Road", id: "490010868N", letter: "T", direction: "Alison work towards Home", lines: ["468"] },
     { name: "South Norwood Clock Tower", id: "490012320A", letter: "A", direction: "South Norwood towards Purley David Lloyd", lines: ["157"] },
     { name: "Hannibal Way", id: "490007755E", letter: "", direction: "Purley David Lloyd towards South Norwood", lines: ["157"] },
     { name: "Cromwell Road", id: "490013376S", letter: "H", direction: "Alison work to Purley David Lloyd", lines: ["157"] },
@@ -13,15 +14,15 @@ const trainStops = [
         name: "Norwood Junction",
         id: "910GNORWDJ",
         type: "train",
-        direction: "Thameslink to Bedford",
-        filter: arrival => (arrival.destinationName || "").includes("Bedford")
+        direction: "Thameslink to Farringdon",
+        filter: arrival => !(arrival.destinationName || "").includes("Three Bridges")
     },
     {
         name: "Farringdon",
         id: "940GZZLUFCN",
         type: "tube",
-        direction: "Met Line to Uxbridge",
-        filter: arrival => arrival.lineName === "Metropolitan" && (arrival.destinationName || "").includes("Uxbridge")
+        direction: "Met Line to Harrow",
+        filter: arrival => arrival.lineName === "Metropolitan" && !(arrival.destinationName || "").includes("Aldgate")
     },
     {
         name: "West Harrow",
@@ -60,10 +61,11 @@ async function fetchArrivals(stop) {
                 const depDate = depTime ? new Date(depTime) : new Date();
                 const now = new Date();
                 const timeToStation = depTime ? Math.max(0, Math.floor((depDate - now) / 1000)) : 0;
+                const rawDest = item.destinationName && item.destinationName !== 'None' ? item.destinationName : (item.towards || '');
                 
                 return {
                     lineName: "Thameslink",
-                    destinationName: (item.destinationName || "").replace(' Rail Station', ''),
+                    destinationName: rawDest.replace(' Rail Station', ''),
                     timeToStation: timeToStation,
                     expectedArrival: depTime || "",
                     platformName: item.platformName || ""
@@ -74,13 +76,16 @@ async function fetchArrivals(stop) {
             if (!response.ok) throw new Error('Arrivals response was not ok');
             const data = await response.json();
             
-            return (data || []).map(item => ({
-                lineName: item.lineName || "",
-                destinationName: item.destinationName || "",
-                timeToStation: item.timeToStation || 0,
-                expectedArrival: item.expectedArrival || "",
-                platformName: item.platformName || ""
-            }));
+            return (data || []).map(item => {
+                const rawDest = item.destinationName && item.destinationName !== 'None' ? item.destinationName : (item.towards || '');
+                return {
+                    lineName: item.lineName || "",
+                    destinationName: rawDest.replace(' Underground Station', '').replace(' Rail Station', ''),
+                    timeToStation: item.timeToStation || 0,
+                    expectedArrival: item.expectedArrival || "",
+                    platformName: item.platformName || ""
+                };
+            });
         }
     } catch (error) {
         console.error(`Error fetching data for ${stop.name}:`, error);
