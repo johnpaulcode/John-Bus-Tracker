@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John's Bus Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+    <header>
+        <h1>Bus Times</h1>
+        <button id="refresh-btn" aria-label="Refresh Times">↻ Refresh</button>
+    </header>
+
+    <nav class="tab-bar">
+        <button id="tab-bus" class="tab-btn active">🚌 Buses</button>
+        <button id="tab-train" class="tab-btn">🚇 Trains & Tubes</button>
+    </nav>
+
+    <main id="app">
+        <!-- Arrivals will be inserted here -->
+        <div class="loading">Loading...</div>
+    </main>
+
+    <footer>
+        <p>Data from TFL</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>

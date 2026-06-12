@@ -1,0 +1,21 @@
+{
+    "name": "John's Bus Tracker",
+    "short_name": "John's Bus",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#dc241f",
+    "description": "Simple bus times for John.",
+    "icons": [
+        {
+            "src": "assets/icon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
