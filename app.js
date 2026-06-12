@@ -20,7 +20,7 @@ const allStops = [
         id: "940GZZLUWHW",
         type: "tube",
         direction: "Met Line towards Farringdon",
-        category: "fromHome",
+        category: "toHome",
         filter: arrival => arrival.lineName === "Metropolitan" && ((arrival.platformName || "").includes("Southbound") || (arrival.platformName || "").includes("Platform 2"))
     },
 
@@ -35,7 +35,7 @@ const allStops = [
         id: "940GZZLUFCN",
         type: "tube",
         direction: "Met Line to Harrow",
-        category: "toHome",
+        category: "fromHome",
         filter: arrival => arrival.lineName === "Metropolitan" && !(arrival.destinationName || "").includes("Aldgate")
     },
     {
